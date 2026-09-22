@@ -1,6 +1,6 @@
 ﻿# XboxKit (Xbox / Xbox 360 ISO Toolkit & GUI)
 
-[![Version](https://img.shields.io/badge/Version-v1.0.3-brightgreen.svg)]()
+[![Version](https://img.shields.io/badge/Version-v1.0.4-brightgreen.svg)]()
 [![.NET](https://img.shields.io/badge/.NET-8.0-blue.svg)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20x64-brightgreen.svg)]()
 [![Single File Executable](https://img.shields.io/badge/Release-Standalone%20Single%20EXE-orange.svg)]()
@@ -160,4 +160,6 @@ Batch ?듭뀡 (Redump ISO ???:
 
 蹂??꾨줈?앺듃??[MIT ?쇱씠?좎뒪](LICENSE.txt) ?섏뿉 諛고룷?⑸땲??
 Copyright (c) Deterous 2024-2026. GUI & Enhanced Architecture by RR-korea.
+
+
 

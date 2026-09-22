@@ -328,11 +328,28 @@ namespace XboxKit.GUI
                         bool isXiso = LibXGD.XDVDFS.IsValidXISO(fs);
                         if (isXiso)
                         {
-                            AppendLog(" [OK] 유효한 XDVDFS (XISO) 시그니처가 확인되었습니다.");
+                            AppendLog(" [OK] 시작 섹터에서 유효한 XDVDFS (XISO) 시그니처가 확인되었습니다.");
+                        }
+                        else if (redumpType >= 0)
+                        {
+                            int targetXgdType = LibXGD.XGD.GetXGDType(redumpType);
+                            long offset = LibXGD.XGD.XISO_OFFSET[targetXgdType];
+                            if (fs.Length > offset)
+                            {
+                                fs.Seek(offset, SeekOrigin.Begin);
+                                if (LibXGD.XDVDFS.IsValidXISO(fs))
+                                {
+                                    AppendLog($" [OK] Redump 내부 게임 파티션(오프셋: 0x{offset:X8})에서 유효한 XDVDFS 시그니처가 정상 확인되었습니다!");
+                                }
+                                else
+                                {
+                                    AppendLog($" [경고] Redump 내부 게임 파티션 오프셋(0x{offset:X8})에서도 XDVDFS 시그니처를 찾지 못했습니다.");
+                                }
+                            }
                         }
                         else
                         {
-                            AppendLog(" [안내] 시작 섹터에서 XDVDFS 매직을 찾지 못했습니다. (Redump ISO의 경우 내부 오프셋에 위치합니다)");
+                            AppendLog(" [안내] 시작 섹터에서 XDVDFS 매직을 찾지 못했습니다. (비표준 크기이거나 분할/암호화된 이미지일 수 있습니다)");
                         }
                     }
 
@@ -350,6 +367,28 @@ namespace XboxKit.GUI
                     AppendLog($" - Filler Data ({baseName}.filler): " + (File.Exists(testFiller) ? $"[발견됨] ({new FileInfo(testFiller).Length:N0} 바이트)" : "[없음]"));
                     AppendLog($" - Seed Data ({baseName}.seed): " + (File.Exists(testSeed) ? $"[발견됨] ({new FileInfo(testSeed).Length:N0} 바이트)" : "[없음]"));
                     AppendLog($" - System Update (su20076000_00000000): " + (File.Exists(testUpdate) ? $"[발견됨] ({new FileInfo(testUpdate).Length:N0} 바이트)" : "[없음]"));
+
+                    if (redumpType >= 0)
+                    {
+                        AppendLog($"\n [핵심 안내] 현재 선택하신 파일은 게임 파티션+비디오+패딩이 모두 합쳐진 '온전한 원본 Redump ISO'입니다.");
+                        AppendLog($"   * 따라서 복원(Rebuild)을 위한 보조 파일이 필요하지 않습니다.");
+                        AppendLog($"   * [추출 및 변환] 탭에서 [-a] (전체 복원 데이터 생성) 옵션으로 추출을 실행하시면,");
+                        AppendLog($"     이 ISO로부터 위 보조 파일들(.video.iso, .filler 등)이 '자동으로 추출/생성'됩니다.");
+                    }
+                    else
+                    {
+                        AppendLog($"\n [보조 파일 생성 및 자동 대체 가능 여부 안내]");
+                        AppendLog($"   1. Video ISO (.video.iso):");
+                        AppendLog($"      - Xbox 360의 Video 파티션은 Wave 버전별로 공용 표준 규격입니다.");
+                        AppendLog($"      - 동일한 Wave를 사용하는 다른 게임의 video.iso를 복사/이름변경하여 재사용 가능합니다.");
+                        AppendLog($"   2. Filler Data (.filler):");
+                        AppendLog($"      - 디스크 여백 패딩 데이터입니다. 에뮬레이터/하드로더 구동용이라면 없어도 구동에 영향이 없습니다.");
+                        AppendLog($"      - 단, Redump 100% 비트 일치 해시 복원을 원할 경우 최초 원본에서 추출해둔 .filler가 필요합니다.");
+                        AppendLog($"   3. Seed Data (.seed):");
+                        AppendLog($"      - XGD1 디스크의 경우 XboxKit에 내장된 PRNG 브루트포스 복원 알고리즘으로 자동 계산 복구 가능합니다.");
+                        AppendLog($"   4. System Update (su...):");
+                        AppendLog($"      - 대시보드 펌웨어 업데이트 파일로, 미보유 시 비워두셔도 게임 실행에는 지장이 없습니다.");
+                    }
 
                     AppendLog("\n========================================================");
                     AppendLog("사전 분석 완료! 세부 사항은 위 로그를 참고하세요.");
