@@ -187,7 +187,7 @@ namespace LibXGD
             if (isoFS.Read(nameBytes, 0, nameLength) != nameLength)
                 return;
 
-            string name = Encoding.ASCII.GetString(nameBytes);
+            string name = Encoding.UTF8.GetString(nameBytes);
             bool isDirectory = (attributes & 0x10) != 0;
             long entryOffset = (long)entrySector * SECTOR_SIZE;
             string entryPath = dirPath.Length > 0 ? dirPath + "/" + name : name;

@@ -1,6 +1,30 @@
-# XboxKit
+# XboxKit (with Windows GUI)
+
+![XboxKit GUI](docs/screenshot.png)
 
 **XboxKit** losslessly converts between Xbox / Xbox 360 disc image formats for archival and collection purposes. It supports Redump ISOs, XISO ([XDVDFS](https://multimedia.cx/xdvdfs.html) format) images of the game partition, video ISO (DVD-Video format) images of the video partition, extracted random filler padding data, XGD1 filler seeds, system update files (from XGD3 video ISOs), XISO skeletons, ZAR ([ZArchive](https://github.com/Exzap/ZArchive)), and individual game files.
+
+## 🖥️ Windows GUI (`XboxKit-GUI.exe`)
+
+A native Windows standard GUI is now included as a standalone, single-file executable:
+
+- **Single Executable**: Completely self-contained single `.exe` file without needing to install .NET runtimes.
+- **Drag & Drop**: Drag and drop ISO or XISO files directly onto the window.
+- **One-Click Presets**:
+  - 🎮 **Emulator Optimized (-b)**: Trimmed and wiped XISO for minimal size and maximum emulator compatibility.
+  - 📦 **Full Lossless Archive (-a)**: Extract all data components (XISO, Video ISO, random filler, seed, system update) for full lossless archival.
+  - 🗜️ **ZArchive Compression (-c)**: Compress game files into `.zar` format with skeleton XISO.
+  - ⚙️ **Custom Options**: Granular checkboxes for each operation.
+- **Rebuild Mode**: Seamlessly reconstruct original Redump ISOs by combining XISO and secondary files.
+- **CJK & Unicode Support**: Full UTF-8 multi-language encoding support for Korean (한국어), Japanese (日本語), and Unicode paths/filenames.
+
+### Building the GUI executable
+
+```bash
+dotnet publish XboxKit.GUI/XboxKit.GUI.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:EnableCompressionInSingleFile=true -o publish
+```
+The output `publish/XboxKit-GUI.exe` is a standalone executable.
+
 
 ```mermaid
 graph LR

@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>XboxKit-GUI</AssemblyName>
+    <RootNamespace>XboxKit.GUI</RootNamespace>
+    <Version>0.7.0</Version>
+    <Authors>Deterous</Authors>
+    <Description>Xbox ISO Toolkit GUI</Description>
+    
+    <!-- Single File Packaging Settings -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\XboxKit\*.cs" Exclude="..\XboxKit\Program.cs" LinkBase="XboxKit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LibXGD\LibXGD.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SabreTools.Serialization" Version="3.1.0" />
+    <PackageReference Include="GrindCore" Version="0.7.1" />
+  </ItemGroup>
+
+</Project>
