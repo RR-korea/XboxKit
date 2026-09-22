@@ -274,6 +274,8 @@ namespace XboxKit.GUI
             AppendLog($"대상 파일: {inputPath}");
             AppendLog("========================================================");
 
+            int currentTabIdx = TabMainMode.SelectedIndex;
+
             await Task.Run(() =>
             {
                 try
@@ -298,7 +300,7 @@ namespace XboxKit.GUI
                         string xgdName = xgdType == 0 ? "XGD1 (Xbox 오리지널)" : (xgdType == 3 ? "XGD3 (Xbox 360 후기형)" : "XGD2 (Xbox 360)");
                         AppendLog($" [OK] 표준 Redump ISO로 식별되었습니다! (타입 인덱스: {redumpType}, 규격: {xgdName})");
                         AppendLog($"  -> 추천 작업: [추출 및 변환] 탭에서 에뮬레이터용 XISO 변환(-b) 또는 풀 백업(-a)");
-                        if (TabMainMode.SelectedIndex == 1)
+                        if (currentTabIdx == 1)
                         {
                             AppendLog($" [주의] 현재 '원본 복원(Rebuild)' 탭이 선택되어 있습니다.");
                             AppendLog($"  -> 이 파일은 이미 온전한 Redump ISO이므로 복원이 필요하지 않습니다.");
