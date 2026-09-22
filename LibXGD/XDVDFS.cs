@@ -226,6 +226,9 @@ namespace LibXGD
             long numBytes = 0;
             while (numBytes < xisoLength)
             {
+                ProgressReporter.CheckCancelled();
+                ProgressReporter.Report(numBytes, xisoLength, "XISO 변환 중");
+
                 long currentByte = isoOffset + numBytes;
                 long currentSector = (currentByte + SECTOR_SIZE - 1) / SECTOR_SIZE;
                 long bytesUntilEndOfExtent = 0;
@@ -384,6 +387,7 @@ namespace LibXGD
                 }
             }
 
+            ProgressReporter.Report(xisoLength, xisoLength, "XISO 변환 완료");
             return numBytes == xisoLength;
         }
 

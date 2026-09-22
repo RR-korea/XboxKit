@@ -470,6 +470,40 @@ namespace XboxKit.GUI
 
             SetProcessingState(true);
             _cts = new CancellationTokenSource();
+            LibXGD.ProgressReporter.CancellationToken = _cts.Token;
+
+            long lastBytes = 0;
+            DateTime lastTime = DateTime.UtcNow;
+
+            LibXGD.ProgressReporter.OnProgress = (current, total, status) =>
+            {
+                if (total <= 0) return;
+                double pct = Math.Min(100.0, Math.Max(0.0, (double)current / total * 100.0));
+                
+                DateTime now = DateTime.UtcNow;
+                double intervalMs = (now - lastTime).TotalMilliseconds;
+
+                if (intervalMs >= 150 || current >= total)
+                {
+                    double elapsedSec = intervalMs / 1000.0;
+                    double speedMB = elapsedSec > 0 ? ((current - lastBytes) / (1024.0 * 1024.0)) / elapsedSec : 0;
+                    if (speedMB < 0) speedMB = 0;
+
+                    lastTime = now;
+                    lastBytes = current;
+
+                    double curGb = current / (1024.0 * 1024.0 * 1024.0);
+                    double totGb = total / (1024.0 * 1024.0 * 1024.0);
+
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        PbProgress.IsIndeterminate = false;
+                        PbProgress.Value = pct;
+                        TxtPercent.Text = $"{pct:F1}%";
+                        TxtStatus.Text = $"{status}: {pct:F1}% ({curGb:F2} / {totGb:F2} GB) - {speedMB:F1} MB/s";
+                    }));
+                }
+            };
 
             AppendLog($"\n========================================================");
             AppendLog($"[작업 시작] {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
@@ -527,7 +561,10 @@ namespace XboxKit.GUI
             }
             catch (OperationCanceledException)
             {
-                AppendLog("\n[알림] 사용자에 의해 작업이 취소되었습니다.");
+                AppendLog("\n[알림] 사용자에 의해 작업이 성공적으로 취소되었습니다.");
+                TxtStatus.Text = "상태: 사용자에 의해 작업 취소됨";
+                PbProgress.Value = 0;
+                TxtPercent.Text = "0.0%";
             }
             catch (Exception ex)
             {
@@ -538,6 +575,7 @@ namespace XboxKit.GUI
             }
             finally
             {
+                LibXGD.ProgressReporter.Reset();
                 customWriter.Flush();
                 Console.SetOut(originalOut);
                 Console.SetError(originalErr);
@@ -548,6 +586,9 @@ namespace XboxKit.GUI
 
                 if (success)
                 {
+                    TxtStatus.Text = "상태: 작업 완료 (100%)";
+                    PbProgress.Value = 100;
+                    TxtPercent.Text = "100.0%";
                     MessageBox.Show("작업이 완료되었습니다. 결과 로그를 확인하세요.", "알림", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
@@ -559,7 +600,8 @@ namespace XboxKit.GUI
             {
                 _cts.Cancel();
                 BtnCancel.IsEnabled = false;
-                AppendLog("[취소 요청됨] 현재 작업 중단 중...");
+                TxtStatus.Text = "상태: 취소 중... 잠시만 기다려 주세요";
+                AppendLog("[취소 요청됨] 현재 파일 쓰기 루프를 즉시 중단하고 있습니다...");
             }
         }
 
@@ -575,14 +617,17 @@ namespace XboxKit.GUI
 
             if (isProcessing)
             {
-                TxtStatus.Text = "상태: 작업 진행 중...";
-                PbProgress.IsIndeterminate = true;
+                TxtStatus.Text = "상태: 작업 준비 중...";
+                TxtPercent.Text = "0.0%";
+                PbProgress.IsIndeterminate = false;
+                PbProgress.Value = 0;
             }
             else
             {
-                TxtStatus.Text = "상태: 대기 중";
-                PbProgress.IsIndeterminate = false;
-                PbProgress.Value = 0;
+                if (TxtStatus.Text.StartsWith("상태: 작업 준비"))
+                {
+                    TxtStatus.Text = "상태: 대기 중";
+                }
             }
         }
 

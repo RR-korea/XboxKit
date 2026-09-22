@@ -134,8 +134,11 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,12,0">
-                <TextBlock x:Name="TxtStatus" Text="상태: 대기 중" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                <ProgressBar x:Name="PbProgress" Height="18" IsIndeterminate="False" Value="0" Maximum="100"/>
+                <Grid Margin="0,0,0,4">
+                    <TextBlock x:Name="TxtStatus" Text="상태: 대기 중" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="TxtPercent" Text="0.0%" HorizontalAlignment="Right" FontWeight="Bold" Foreground="#0D6EFD"/>
+                </Grid>
+                <ProgressBar x:Name="PbProgress" Height="20" IsIndeterminate="False" Minimum="0" Maximum="100" Value="0"/>
             </StackPanel>
 
             <Button x:Name="BtnTestInspect" Grid.Column="1" Content="🔍 분석 / 사전 테스트" Width="150" Height="42" 

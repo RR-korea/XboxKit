@@ -198,6 +198,9 @@ namespace LibXGD
                 isoFS.Seek(0, SeekOrigin.Begin);
                 while (currentByte < xisoLength)
                 {
+                    ProgressReporter.CheckCancelled();
+                    ProgressReporter.Report(xisoOffset + currentByte, redumpLength, "Redump ISO 복원 중");
+
                     long currentSector = (currentByte + XDVDFS.SECTOR_SIZE - 1) / XDVDFS.SECTOR_SIZE;
                     long xisoBytes = 0;
                     long fillerBytes = 0;

@@ -5,6 +5,9 @@ namespace LibXGD
 {
     public class Utils
     {
+        // 512 섹터 = 1MB 버퍼 (고속 대용량 스트리밍)
+        private const int BUFFER_SIZE = (int)(512 * XDVDFS.SECTOR_SIZE);
+
         // Read uint16 from filestream
         public static ushort ReadUShort(FileStream fs)
         {
@@ -31,6 +34,7 @@ namespace LibXGD
                 fs.Seek(offset, SeekOrigin.Begin);
             while (numBytes < outBA.Length)
             {
+                ProgressReporter.CheckCancelled();
                 int bytesRead = fs.Read(outBA, (int)numBytes, (int)(outBA.Length - numBytes));
                 if (bytesRead == 0)
                     break;
@@ -43,12 +47,13 @@ namespace LibXGD
         // Ensure proper writing to filestream
         public static bool WriteBytes(FileStream inFS, FileStream outFS, long offset, long length)
         {
-            byte[] buf = new byte[64 * XDVDFS.SECTOR_SIZE];
+            byte[] buf = new byte[BUFFER_SIZE];
             long numBytes = 0;
             if (offset >= 0)
                 inFS.Seek(offset, SeekOrigin.Begin);
             while (numBytes < length)
             {
+                ProgressReporter.CheckCancelled();
                 int bytesRead = inFS.Read(buf, 0, (int)Math.Min(buf.Length, length - numBytes));
                 if (bytesRead == 0)
                     break;
@@ -62,12 +67,13 @@ namespace LibXGD
         // Write zeroes to filestream
         public static void WriteZeroes(FileStream outFS, long offset, long length)
         {
-            byte[] buf = new byte[64 * XDVDFS.SECTOR_SIZE];
+            byte[] buf = new byte[BUFFER_SIZE];
             long numBytes = 0;
             if (offset >= 0)
                 outFS.Seek(offset, SeekOrigin.Begin);
             while (numBytes < length)
             {
+                ProgressReporter.CheckCancelled();
                 int bytesToWrite = (int)Math.Min(buf.Length, length - numBytes);
                 outFS.Write(buf, 0, bytesToWrite);
                 numBytes += bytesToWrite;
