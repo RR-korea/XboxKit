@@ -20,12 +20,16 @@ namespace XboxKit.GUI
         {
             InitializeComponent();
 
+            var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            string versionString = ver != null ? $"{ver.Major}.{ver.Minor}.{ver.Build}" : "1.0.0";
+            this.Title = $"XboxKit v{versionString} - Xbox / Xbox 360 ISO 변환 및 복원 도구";
+
             string logPath = FileLogger.Instance.LogFilePath;
             TxtLogFilePath.Text = string.IsNullOrEmpty(logPath) 
                 ? "로그 파일: 비활성화됨" 
                 : $"로그 파일: {Path.GetFileName(logPath)}";
 
-            AppendLog("XboxKit GUI v0.7.0 준비 완료");
+            AppendLog($"XboxKit GUI v{versionString} 준비 완료");
             AppendLog($"세션 로그 파일: {logPath}");
             AppendLog("원하는 디스크 이미지(.iso / .xiso)를 선택하거나 창 위로 드래그 앤 드롭하세요.\n");
         }
