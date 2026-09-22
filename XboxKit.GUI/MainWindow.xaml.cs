@@ -477,7 +477,7 @@ namespace XboxKit.GUI
             // 콘솔 출력을 UI 및 로그 파일로 리디렉트
             ConsoleRedirectWriter customWriter = new ConsoleRedirectWriter(line =>
             {
-                Dispatcher.BeginInvoke(new Action(() => AppendLog(line)));
+                AppendLog(line);
             });
 
             bool success = false;
@@ -582,9 +582,21 @@ namespace XboxKit.GUI
 
         private void AppendLog(string message)
         {
-            TxtLog.AppendText(message + "\n");
-            TxtLog.ScrollToEnd();
             FileLogger.Instance.Log(message);
+
+            if (Dispatcher.CheckAccess())
+            {
+                TxtLog.AppendText(message + "\n");
+                TxtLog.ScrollToEnd();
+            }
+            else
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    TxtLog.AppendText(message + "\n");
+                    TxtLog.ScrollToEnd();
+                }));
+            }
         }
 
         private void BtnOpenLogDir_Click(object sender, RoutedEventArgs e)
