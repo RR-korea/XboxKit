@@ -1,154 +1,163 @@
-# XboxKit (with Windows GUI)
+﻿# XboxKit (Xbox / Xbox 360 ISO Toolkit & GUI)
+
+[![Version](https://img.shields.io/badge/Version-v1.0.3-brightgreen.svg)]()
+[![.NET](https://img.shields.io/badge/.NET-8.0-blue.svg)](https://dotnet.microsoft.com/)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20x64-brightgreen.svg)]()
+[![Single File Executable](https://img.shields.io/badge/Release-Standalone%20Single%20EXE-orange.svg)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ![XboxKit GUI](docs/screenshot.png)
 
-**XboxKit** losslessly converts between Xbox / Xbox 360 disc image formats for archival and collection purposes. It supports Redump ISOs, XISO ([XDVDFS](https://multimedia.cx/xdvdfs.html) format) images of the game partition, video ISO (DVD-Video format) images of the video partition, extracted random filler padding data, XGD1 filler seeds, system update files (from XGD3 video ISOs), XISO skeletons, ZAR ([ZArchive](https://github.com/Exzap/ZArchive)), and individual game files.
+**XboxKit**? Xbox(?ㅻ━吏?? 諛?Xbox 360 ?붿뒪???대?吏瑜??꾩뭅?대튃, ?섏쭛, ?먮??덉씠??援щ룞 紐⑹쟻?쇰줈 **100% 臾댁넀??蹂??諛?蹂듭썝(Rebuild)**?섎뒗 ?ъ씤???꾧뎄?낅땲??
 
-## 🖥️ Windows GUI (`XboxKit-GUI.exe`)
+理쒖떊 ?덈룄???쒖? WPF GUI ?명꽣?섏씠??`XboxKit-GUI.exe`), ?ㅼ떆媛??띾룄/吏꾪뻾瑜??쒖떆, 利됯컖 痍⑥냼(Cancel), ?쒓뎅?는룹씪蹂몄뼱 ??CJK ?좊땲肄붾뱶 ?꾨꼍 吏?? 洹몃━怨?.NET ?고????ㅼ튂媛 ?꾩슂 ?녿뒗 **?낅┰???⑥씪 ?ㅽ뻾 ?뚯씪(Self-Contained Single-File EXE)**濡??쒓났?⑸땲??
 
-A native Windows standard GUI is now included as a standalone, single-file executable:
+---
 
-- **Single Executable**: Completely self-contained single `.exe` file without needing to install .NET runtimes.
-- **Drag & Drop**: Drag and drop ISO or XISO files directly onto the window.
-- **One-Click Presets**:
-  - 🎮 **Emulator Optimized (-b)**: Trimmed and wiped XISO for minimal size and maximum emulator compatibility.
-  - 📦 **Full Lossless Archive (-a)**: Extract all data components (XISO, Video ISO, random filler, seed, system update) for full lossless archival.
-  - 🗜️ **ZArchive Compression (-c)**: Compress game files into `.zar` format with skeleton XISO.
-  - ⚙️ **Custom Options**: Granular checkboxes for each operation.
-- **Rebuild Mode**: Seamlessly reconstruct original Redump ISOs by combining XISO and secondary files.
-- **CJK & Unicode Support**: Full UTF-8 multi-language encoding support for Korean (한국어), Japanese (日本語), and Unicode paths/filenames.
+## ?룛截??쒖뒪???꾪궎?띿쿂 (Architecture)
 
-### Building the GUI executable
+XboxKit? ??븷蹂꾨줈 ?꾩쟾??遺꾨━??3怨꾩링 ?꾪궎?띿쿂濡?援ъ꽦?섏뼱 ?덉쑝硫? 鍮꾨룞湲?諛깃렇?쇱슫??泥섎━? ?ㅻ젅???덉쟾??吏꾪뻾瑜?由ы룷?곕? ?듯빐 UI媛 硫덉텛吏 ?딅뒗 ?곗뼱??諛섏쓳?깆쓣 蹂댁옣?⑸땲??
 
+```mermaid
+graph TD
+    subgraph UI ["Presentation Layer (XboxKit.GUI)"]
+        WPF["WPF Native Windows UI (v1.0.x)"]
+        DND["Drag & Drop / File Browser"]
+        PROG["Real-time Progress (MB/s, %, Bytes)"]
+        LOG["Thread-Safe Console & File Logger"]
+    end
+
+    subgraph Core ["Application Core (XboxKit)"]
+        ROUTER["Mode Router & Options Parser"]
+        EXT_REDUMP["Extract Redump ISO (-a, -b, -c)"]
+        EXT_VIDEO["Extract Video Partition (-v, -u)"]
+        PROC_XISO["Process XISO (Trim, Wipe, Files)"]
+        REBUILD["Rebuild Redump ISO"]
+    end
+
+    subgraph Engine ["Engine Layer (LibXGD)"]
+        PR["ProgressReporter (Cancellation & Throttle)"]
+        BUFFER["1MB Streaming High-Speed Buffer"]
+        XDVDFS["XDVDFS FileSystem Engine (UTF-8)"]
+        XGD_MGR["XGD Partition Manager (XGD1/2/3)"]
+        ZAR["ZArchive Compressor & Reader"]
+        PRNG["XboxPRNG (XGD1 Brute-force Seed)"]
+    end
+
+    WPF --> ROUTER
+    WPF --> PR
+    WPF --> LOG
+    ROUTER --> EXT_REDUMP
+    ROUTER --> EXT_VIDEO
+    ROUTER --> PROC_XISO
+    ROUTER --> REBUILD
+    
+    EXT_REDUMP --> Engine
+    EXT_VIDEO --> Engine
+    PROC_XISO --> Engine
+    REBUILD --> Engine
+    
+    Engine --> PR
+    BUFFER --> PR
+```
+
+### ?꾪궎?띿쿂 ?듭떖 ?ㅺ퀎 ?먯튃
+1. **?ㅻ젅??遺꾨━ 諛?鍮꾨룞湲??뚯씠?꾨씪??*: 紐⑤뱺 ?붿뒪??I/O? 臾닿굅???뚯씪 蹂듭궗??諛깃렇?쇱슫???쒖뒪??`Task.Run`)?먯꽌 ?섑뻾?섎ŉ, UI??150ms ?⑥쐞 Throttling???듯빐 ???놁씠 遺?쒕윭??60fps 媛깆떊???좎??⑸땲??
+2. **利됯컖?곸씤 痍⑥냼(Cancellation Token) 吏??*: `LibXGD.ProgressReporter`媛 1MB I/O 釉붾줉 ?⑥쐞留덈떎 痍⑥냼 ?붿껌??寃?ы븯?? ?ъ슜?먭? 痍⑥냼 ?대┃ ??0.1珥???利됯컖 ?덉쟾?섍쾶 猷⑦봽瑜??덉텧?섍퀬 ?뚯씪 ?몃뱾???뺣━?⑸땲??
+3. **?ㅻ젅???덉쟾??濡쒓퉭(Thread-Safe Logging)**: `Dispatcher.CheckAccess()`瑜?湲곕컲?쇰줈 ???댁쨷 踰꾪띁 濡쒓퉭???곸슜?섏뿬 ?щ줈???ㅻ젅???덉쇅 ?놁씠 ?ㅼ떆媛?濡쒓렇 李쎄낵 ?몄뀡 ?뚯씪(`logs/xboxkit_*.log`)???숈떆 湲곕줉?⑸땲??
+4. **?좊땲肄붾뱶/CJK ?⑥쟾 蹂댁〈**: XDVDFS 諛?ZArchive ?붾젆?곕━ ?뷀듃由??붿퐫????UTF-8 ?쒖????곸슜?섏뿬 ?쒓뎅?? ?쇰낯???깆쓽 ?뚯씪紐낃낵 寃쎈줈媛 ?덈? 源⑥?吏 ?딆뒿?덈떎.
+
+---
+
+## ?뼢截?二쇱슂 湲곕뒫 (Key Features)
+
+### 1. 吏곴??곸씤 ?덈룄???쒖? GUI
+- **?⑥씪 ?ㅽ뻾 ?뚯씪**: 異붽? ?뚰봽?몄썾?대굹 .NET SDK/?고????ㅼ튂 ?놁씠 `XboxKit-GUI.exe` ?섎굹留??ㅽ뻾?섎㈃ 利됱떆 ?숈옉?⑸땲??
+- **?쒕옒洹????쒕∼ 吏??*: ?붿뒪???대?吏 ?뚯씪??李??꾩뿉 ?뚯뼱???볦쑝硫??뚯씪 ?ш린? 洹쒓꺽(XGD1, XGD2, XGD3, Redump ISO, XISO)???먮룞?쇰줈 ?먮퀎?⑸땲??
+- **?먰겢由?理쒖쟻???꾨━??*:
+  - ?렜 **?먮??덉씠??理쒖쟻??XISO (-b) [異붿쿇]**: 臾댁옉???⑤뵫(?꾨윭)??0?쇰줈 吏?곌퀬 ?앹쓣 ?몃┝?섏뿬 理쒖냼 ?⑸웾??源⑤걮??XISO瑜??앹꽦?⑸땲??
+  - ?벀 **臾댁넀???꾩껜 蹂댁〈 諛깆뾽 (-a)**: XISO, 鍮꾨뵒??ISO, ?꾨윭 ?곗씠?? ?쒖닔 ?쒕뱶, ?쒖뒪???낅뜲?댄듃 ?뚯씪 ??100% 蹂듭썝???꾩슂??紐⑤뱺 ?붿냼瑜?遺꾪븷 異붿텧?⑸땲??
+  - ?뿙截?**ZArchive 臾댁넀???뺤텞 (-c)**: 寃뚯엫 ?뚯씪?ㅼ쓣 怨좎븬異?`.zar` ?꾩뭅?대툕濡?臾띔퀬 ?ㅼ펷?덊넠 XISO瑜??앹꽦?⑸땲??
+  - ?숋툘 **?몃? 而ㅼ뒪? ?듭뀡**: ?몃┝, ??댄봽, 鍮꾨뵒??異붿텧, ?쒖뒪???낅뜲?댄듃 異붿텧, 寃뚯엫 ?뚯씪 ?대뜑 異붿텧(-o) ??媛쒕퀎 泥댄겕諛뺤뒪 ?쒓났.
+
+### 2. ?먮낯 蹂듭썝 (Rebuild Redump ISO)
+- 遺꾪븷 ?먮뒗 ?몃┝??`.xiso`? ?숇큺??蹂댁“ ?뚯씪??`.video.iso`, `.filler`, `.seed`, `su20076000_00000000`)???먮룞?쇰줈 寃고빀?섏뿬 **鍮꾪듃 ?⑥쐞濡?100% ?숈씪???먮낯 Redump ISO濡??ш뎄異?*?⑸땲??
+
+### 3. ?ъ쟾 遺꾩꽍 諛??덉쟾 ?뚯뒪??(`[?뵇 遺꾩꽍 / ?ъ쟾 ?뚯뒪??`)
+- ?ㅼ젣 ?뚯씪 蹂?섏씠???붿뒪???곌린瑜??쒖옉?섍린 ?꾩뿉, ?뚯씪 洹쒓꺽, ?뚰떚???ㅽ봽?? XDVDFS 留ㅼ쭅 ?ㅻ뜑 臾닿껐?? 蹂댁“ ?뚯씪 ?숇컲 ?щ?瑜??ъ쟾 寃?ы븯???덉쟾?깆쓣 ?뚯뒪?명븷 ???덉뒿?덈떎.
+
+### 4. ?ㅼ떆媛??꾩떎???꾨줈洹몃젅?ㅻ컮 諛??꾩넚 ?띾룄 怨꾩궛
+- ?⑥닚 臾댄븳 猷⑦봽 ?꾨줈洹몃젅?ㅻ컮媛 ?꾨땶, **?ㅼ젣 諛붿씠??泥섎━??0.0% ~ 100.0%)**, **?꾩옱 蹂듭궗 ?⑸웾 / 珥??⑸웾(GB)**, **?ㅼ떆媛??꾩넚 ?띾룄(MB/s)** 瑜?150ms 二쇨린濡??뺥솗?섍쾶 ?쒓컖?뷀빀?덈떎.
+- **1MB 怨좎냽 踰꾪띁 ?ㅽ듃由щ컢** ?곸슜?쇰줈 湲곗〈 ?鍮?蹂듭궗 ?띾룄媛 鍮꾩빟?곸쑝濡??μ긽?섏뿀?듬땲??
+
+### 5. ?몄뀡 ?먮룞 ?뚯씪 濡쒓퉭
+- ?꾨줈洹몃옩 ?ㅽ뻾 ??`logs/xboxkit_YYYY-MM-DD_HH-mm-ss.log` ?뚯씪???먮룞 ?앹꽦?섏뼱 紐⑤뱺 ?묒뾽 ?댁뿭怨??곸꽭 ?ㅽ깮 ?몃젅?댁뒪媛 湲곕줉?섎ŉ, `[?뱛 濡쒓렇 ?대뜑 ?닿린]` 踰꾪듉?쇰줈 諛붾줈 ?대엺?????덉뒿?덈떎.
+
+---
+
+## ?뱤 吏???붿뒪??洹쒓꺽 留ㅽ듃由?뒪
+
+| ?붿뒪??洹쒓꺽 | ?뚮옯??| 誘몃뵒???ш린 (諛붿씠?? | 鍮꾨뵒???뚰떚??| 寃뚯엫 ?뚰떚??(XISO) |
+|:---:|:---:|:---:|:---:|:---:|
+| **XGD1** | Original Xbox | 7,823,196,160 (7.28 GB) | DVD-Video (L0: 14 MB, L1: 320 KB) | XDVDFS (??7.05 GB) |
+| **XGD2** | Xbox 360 (珥댟룹쨷湲? | 7,838,695,424 (7.30 GB) | DVD-Video (Wave 0~20) | XDVDFS (??7.30 GB) |
+| **XGD2-Hybrid** | Xbox 360 | 7,836,663,808 (7.29 GB) | DVD-Video (Hybrid Wave) | XDVDFS (??3.21 GB) |
+| **XGD3** | Xbox 360 (?꾧린) | 8,738,846,720 (8.13 GB) | DVD-Video (System Update ?ы븿) | XDVDFS (??8.65 GB) |
+
+---
+
+## ?? 鍮뚮뱶 諛??ㅽ뻾 媛?대뱶
+
+### 1. ?⑥씪 ?ㅽ뻾 ?뚯씪 鍮뚮뱶 (One-Click Automated Build)
+?꾨줈?앺듃 猷⑦듃?먯꽌 ?쒓났?섎뒗 ?듯빀 鍮뚮뱶 ?ㅽ겕由쏀듃瑜??ㅽ뻾?섎㈃ 踰꾩쟾??0.0.1 ?⑥쐞濡??먮룞 利앷??섎ŉ, ?⑥씪 ?ㅽ뻾 ?뚯씪 鍮뚮뱶, 理쒖떊 ?ㅽ겕由곗꺑 媛깆떊 諛?Git Push媛 ??踰덉뿉 ?섑뻾?⑸땲??
+
+```powershell
+# GitHub Push瑜??ы븿???꾩껜 鍮뚮뱶 ?뚯씠?꾨씪??.\build.ps1 -Token "YOUR_GITHUB_PAT"
+
+# 濡쒖뺄 ?⑥씪 exe 鍮뚮뱶留??섑뻾????.\build.ps1 -NoPush
+```
+
+### 2. ?섎룞 dotnet CLI 鍮뚮뱶
 ```bash
 dotnet publish XboxKit.GUI/XboxKit.GUI.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:EnableCompressionInSingleFile=true -o publish
 ```
-The output `publish/XboxKit-GUI.exe` is a standalone executable.
+鍮뚮뱶 ?꾨즺 ??`publish/XboxKit-GUI.exe` ?⑥씪 ?뚯씪???앹꽦?⑸땲??
 
+---
 
-```mermaid
-graph LR
-    A[Redump ISO]
-    O[Game Files]
-    P[XDVDFS\nSkeleton]
-    T[Trimmed XISO]
-    U[System\nUpdate]
-    V[Video ISO]
-    W[Wiped XISO]
-    Z[ZArchive]
-    subgraph X [XDVDFS ISO]
-        XISO(Raw XISO)
-        XISO -->|--trim| T
-    end
-    subgraph F [Filler Data]
-        R(Random Filler)
-        S(XGD1 Seed)
-    end
-    A -->|--video| V
-    V -->|--update| U
-    A -->|--xiso| X
-    X -->|--random| R
-    X -->|--seed| S
-    X -->|--wipe| W
-    W -->|--output| O
-    W -->|--petrify| P
-    W -->|--zar| Z
+## ?뮲 CLI (紐낅졊以? ?ъ슜踰?
 ```
+Rebuild mode: ?듭뀡 ?놁씠 ?ㅽ뻾 (?낅젰 ?뚯씪?ㅼ쓣 寃고빀?섏뿬 Redump ISO 蹂듭썝)
+Usage: xboxkit.exe <input.xiso> [蹂댁“?뚯씪??..]
 
-## Command-line help text
-
-```
-Rebuild mode: Don't use any options (combines input files)
-Usage: xboxkit.exe <input.xiso> [files...]
-
-Extract mode: Use one or more options (splits input file)
+Extract mode: ?섎굹 ?댁긽???듭뀡怨??④퍡 ?ㅽ뻾 (?낅젰 ?뚯씪??遺꾪븷/蹂??
 Usage: xboxkit.exe [options] <input.iso>
 
-Batch options (for redump ISO):
-  -a, --all       All options for lossless XISO extraction (-rstuvwx)
-  -b, --best      Create trimmed/wiped XISO only (-twx)
-  -c, --compress  Options for lossless ZArchive compression (-puvz)
+Batch ?듭뀡 (Redump ISO ???:
+  -a, --all       臾댁넀???꾩껜 異붿텧 (-rstuvwx)
+  -b, --best      ?먮??덉씠??理쒖쟻??XISO ?앹꽦 (-twx) [異붿쿇]
+  -c, --compress  ZArchive 臾댁넀???뺤텞 (-puvz)
 
-Manual options:
-  -n, --no        Assume no (stops at warnings, never overwrites)
-  -o, --output    Outputs the game files from the XISO
-  -p, --petrify   Extracts XDVDFS skeleton (XISO with zeroed files)
-  -q, --quiet     Don't print INFO messages to console
-  -r, --random    Extracts random filler data to a separate file
-  -s, --seed      Extracts RNG seed used for XGD1 filler
-  -t, --trim      Trims end of XISO (game partition)
-  -u, --update    Extracts update file from video ISO (XGD3 only)
-  -v, --video     Extracts video ISO (video partition)
-  -w, --wipe      Wipes random filler data in XISO
-  -x, --xiso      Extracts XDVDFS ISO (game partition)
-  -y, --yes       Assume yes (ignores warnings, always overwrites)
-  -z, --zar       Creates ZArchive of game files
+?몃? ?듭뀡:
+  -n, --no        寃쎄퀬 ??臾댁“嫄?以묐떒, ??뼱?곗? ?딆쓬
+  -o, --output    XISO ?대???寃뚯엫 ?뚯씪?ㅼ쓣 ?대뜑濡?吏곸젒 異붿텧
+  -p, --petrify   ?ㅼ펷?덊넠 XISO 異붿텧 (寃뚯엫 ?뚯씪 ?댁슜 0?쇰줈 梨꾩?)
+  -q, --quiet     肄섏넄 ?덈궡 硫붿떆吏 ?④?
+  -r, --random    臾댁옉???꾨윭 ?곗씠?곕? 蹂꾨룄 ?뚯씪濡?異붿텧
+  -s, --seed      XGD1 ?꾨윭 ?앹꽦???ъ슜???쒖닔 ?쒕뱶 異붿텧
+  -t, --trim      XISO 寃뚯엫 ?뚰떚???룸?遺??먮Ⅴ湲?(?몃┝)
+  -u, --update    鍮꾨뵒??ISO?먯꽌 ?쒖뒪???낅뜲?댄듃 ?뚯씪 遺꾨━ (XGD3 ?꾩슜)
+  -v, --video     鍮꾨뵒???뚰떚?섏쓣 鍮꾨뵒??ISO濡?異붿텧
+  -w, --wipe      XISO ?대???臾댁옉???꾨윭 ?곗씠?곕? 0?쇰줈 ?뺣━
+  -x, --xiso      XDVDFS 寃뚯엫 ?뚰떚??ISO 異붿텧
+  -y, --yes       ?뺤씤 ??붿긽???놁씠 ??긽 ??뼱?곌린 ?덉슜
+  -z, --zar       寃뚯엫 ?뚯씪?ㅼ쓽 ZArchive(.zar) ?앹꽦
 ```
 
-**Note**: Extracting the system update (su20076000_00000000) is useful for XGD3 discs as deduplication of the XGD3 video ISOs is not possible unlike XGD1/XGD2 (the video partition is unique for each XGD3 disc). When extracting the update, XboxKit zeroes the update file within the video ISO so that it becomes highly compressible (deduplication of the system update file is then possible across multiple XGD3 disc images). XboxKit will ignore the `-u` option when used with XGD1/XGD2 inputs, as they do not have system update files in the video partition.
+---
 
-## Example usage
+## ?뱞 ?쇱씠?좎뒪 (License)
 
-'''Note''': Rebuilding Redump ISO from loose game files or a ZAR is documented but not yet complete, this will be implemented in a future update (at least in the future v1.0 release). ZArchive creation is currently one-way.
+蹂??꾨줈?앺듃??[MIT ?쇱씠?좎뒪](LICENSE.txt) ?섏뿉 諛고룷?⑸땲??
+Copyright (c) Deterous 2024-2026. GUI & Enhanced Architecture by RR-korea.
 
-For lossless conversion from a redump ISO to an XISO, run:
-`./xboxkit.exe -a game.iso`
-
-Outputs:
-- game.xiso (Useable by emulators, smaller, and compresses well)
-- game.video.iso (Video partition, shared by similar discs with the same "wave")
-- game.filler (Random padding filler data, needed for lossless conversion)
-- game.seed (Initial seed used to generate early XGD1 disc random filler data)
-- su20076000_00000000 (System update file for XGD3 only, shared by similar discs)
-
-Losslessly converting back to the original redump ISO:
-`./xboxkit.exe game.xiso`
-(requires all the original output files).
-
-Best options for only conversion to XISO (trims the XISO and wipes the random filler data):
-`./xboxkit.exe -b game.iso`
-
-Outputs:
-- game.xiso (Usable by emulators, smaller, and compresses well)
-
-Losslessly converting from a redump ISO or XISO to a ZArchive of the game files:
-`./xboxkit.exe -c game.iso`
-
-Outputs:
-- game.skeleton.xiso (XISO with all game files zeroed)
-- game.hash (Integrity hashes of the game files)
-- game.video.iso (Video partition, shared by similar discs with the same "wave")
-- su20076000_00000000 (System update file for XGD3 only, shared by similar discs)
-- game.zar (Zstd compressed archive of game files, usable by some emulators)
-
-Losslessly converting back to the original redump ISO:
-`./xboxkit.exe game.zar`
-(requires all the original output files).
-
-If you have renamed the output files, you can explicitly give the paths for rebuilding the redump ISO:
-`./xboxkit.exe game.xiso example.video.iso example.filler su20076000_00000000`
-(replace example.filler with example.seed if applicable)
-
-For more info on using the program options, run `./xboxkit.exe --help`
-
-# Technical Notes
-
-### Purpose
-
-XboxKit was developed as a tool for two-way lossless conversion between large collections of redump-style Xbox & Xbox 360 ISOs and compressed playable formats such as XISO and ZAR. This achieves the balance of archival quality and compressed playable formats, by storing the auxiliary data in sidecar files that can be managed, datted, and stored separately (with deduplication and compression). These sidecar files (such as the filler data, skeleton, and file hashes) do not contain any copyright data, and can be safely shared publicly to allow people with their own backups to confirm their files are not corrupted and repair them to match redump hashes. XboxKit therefore makes it possible for someone with only a backup of the loose game files to rebuild to an redump ISO for archival purposes.
-
-### Xbox Filesystem
-
-The Xbox DVD filesystem (XDVDFS) is a custom filesystem used in Xbox and Xbox 360 DVDs. The volume descriptor is stored at offset 0x10000 (32nd sector) and begins and ends with `MICROSOFT*XBOX*MEDIA`. On XGD1/XGD2 discs, it is followed by another metadata sector that begins with `XBOX_DVD_LAYOUT_TOOL_SIG`. The volume descriptor points to a root directory descriptor, which contains a binary tree of directories and files. On Xbox and Xbox 360 discs, the gaps between file extents are filled with a stream of pseudo-randomly generated bytes (referred to in XboxKit as random filler data). These bytes can be extracted (`--random` option), to make the XISO more compressible. For some early manufactured XGD1 (Original Xbox) discs, the pseudo-random number generator algorithm is simpler and the seed to generate the bytes can be brute forced (`--seed` option). XboxKit also supports storing the XISO filesystem as a skeleton (`--petrify` option) which can be stored separately to the game files, allowing for lossless conversion between the loose files and the original XISO (and with the video ISO, conversion back to the redump ISO).
-
-### Xbox Discs
-
-Xbox & Xbox 360 DVDs (commonly referred to as XGDs) are not physically different from other dual-layer DVDs (DVD-9). A few tweaks to the disc's data format hides the game partition from standard DVD drives. Custom disc drive firmware is required to read the entirety of the disc, such as [OmniDrive](https://github.com/RibShark/OmniDrive) or [Kreon](http://wiki.redump.org/index.php?title=Optical_Disc_Drive_Compatibility:_Xbox_(original)_%26_Xbox_360) firmware. [Redumper](https://github.com/superg/redumper) supports these custom firmware drives and can write to a Redump-style ISO (both video and game partitions combined).
-
-The DVD's PFI[^1] sector indicates to the drive that the DVD's layerbreak[^2] is after the first portion of the video partition[^3]. The [Security Sector](https://github.com/Deterous/ParseXboxMetadata) (SS)[^4] is what is read by Xbox disc drives and instead points to the game partition of the disc, with the true layerbreak value. Redump-style ISOs aim to preserve the entire disc by combining both the video and game partitions into a single ISO file (merging the PFI and SS descriptors[^5]). XISO files instead represent only the game partition pointed to by the SS (removing both the video partition and the middle zones between the partition on both layers). The XISO file uses the Xbox filesystem (commonly referred to as XDVDFS) that is not readable by Windows. Other programs such as [extract-xiso](https://github.com/xboxdev/extract-xiso) recreate the XISO in a lossy manner in order to optimize for file size, while the XISO produced by XboxKit keeps the original XDVDFS filesystem intact.
-
-[^1]: Physical Format Information, a sector in the disc's lead-in describing the disc's data layout.
-[^2]: Sector number at which the data switches from being stored on the 1st layer to the 2nd layer.
-[^3]: The video partition is physically stored on both layers (split at the PFI's layerbreak). In a redump ISO (and physically on the disc), there exists a gap of zeroed sectors between the end of the first layer's video partition and the start of the first layer's game partition. This is repeated on the second layer, with a gap of zeroed sectors between the end of the game parititon and the start of the video partition on the second layer. XboxKit creates the video partition by joining the data at the start and end of the redump ISO, replicating what a standard DVD drive would read if presented with an Xbox disc.
-[^4]: An XGD-specific sector in the lead-out of the DVD that follows the PFI spec, with other data in the reserved bytes. The SS also contains the security sector ranges that are unreadable by disc drives due to intentional mastering errors, and are skipped and left zeroed in the redump ISO. XGD1 (Xbox) has 16 ranges of unreadable sectors within the user data area, while XGD2/XGD3 (Xbox 360) has just two ranges, each range being 4096 sectors long.
-[^5]: The PFI descriptor format specifies three values: the start sector number, the layerbreak, and the end sector number. Redump ISO uses the start/end sector number from the PFI (video partition), but the layerbreak value from the SS (game partition). This way, all valid user data sectors are read from the disc including both partitions.

@@ -31,7 +31,15 @@ $csprojContent = [regex]::Replace($csprojContent, "<AssemblyVersion>[^<]+</Assem
 $csprojContent = [regex]::Replace($csprojContent, "<FileVersion>[^<]+</FileVersion>", "<FileVersion>$currentVerStr</FileVersion>")
 $csprojContent | Set-Content $csprojFile -Encoding utf8
 
-# 3. 실행 중인 기존 프로세스 종료
+# 3. README.md 파일 버전 및 빌드 정보 갱신
+$readmeFile = Join-Path $root "README.md"
+if (Test-Path $readmeFile) {
+    $readmeContent = Get-Content $readmeFile -Raw
+    $readmeContent = [regex]::Replace($readmeContent, "badge/Version-v[^-\)]+-brightgreen\.svg", "badge/Version-v$currentVerStr-brightgreen.svg")
+    $readmeContent | Set-Content $readmeFile -Encoding utf8
+}
+
+# 4. 실행 중인 기존 프로세스 종료
 Get-Process -Name "XboxKit-GUI" -ErrorAction SilentlyContinue | Stop-Process -Force
 Start-Sleep -Milliseconds 500
 
