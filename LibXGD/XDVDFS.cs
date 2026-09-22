@@ -36,6 +36,9 @@ namespace LibXGD
                 return;
 
             long cur = isoOffset + rootOffset + childOffset;
+            if (cur + 14 > isoFS.Length || cur < 0)
+                return;
+
             long curOffset = cur / SECTOR_SIZE;
             long curSize = (rootSize - childOffset + SECTOR_SIZE - 1) / SECTOR_SIZE;
             for (long i = curOffset; i < curOffset + curSize; i++)
@@ -43,13 +46,18 @@ namespace LibXGD
 
             isoFS.Seek(cur, SeekOrigin.Begin);
 
-            ushort leftChildOffset = Utils.ReadUShort(isoFS);
+            byte[] entryHeader = new byte[14];
+            int readBytes = isoFS.Read(entryHeader, 0, 14);
+            if (readBytes < 14)
+                return;
+
+            ushort leftChildOffset = BitConverter.ToUInt16(entryHeader, 0);
             if (leftChildOffset == 0xFFFF)
                 return;
-            ushort rightChildOffset = Utils.ReadUShort(isoFS);
-            long entryOffset = Utils.ReadUInt(isoFS) * SECTOR_SIZE;
-            uint entrySize = Utils.ReadUInt(isoFS);
-            bool isDirectory = ((byte)isoFS.ReadByte() & 0x10) != 0;
+            ushort rightChildOffset = BitConverter.ToUInt16(entryHeader, 2);
+            long entryOffset = (long)BitConverter.ToUInt32(entryHeader, 4) * SECTOR_SIZE;
+            uint entrySize = BitConverter.ToUInt32(entryHeader, 8);
+            bool isDirectory = (entryHeader[12] & 0x10) != 0;
 
             if (leftChildOffset != 0)
                 GetValidSectors(isoFS, isoOffset, sysSectors, fileSectors, rootOffset, rootSize, (long)leftChildOffset * 4, quiet);
@@ -112,7 +120,10 @@ namespace LibXGD
             if (magic.SequenceEqual(MAGIC2))
                 sysSectors.Add((uint)headerOffsetSector + 1);
 
-            GetValidSectors(isoFS, offset, sysSectors, fileSectors, (long)rootOffset * SECTOR_SIZE, rootSize, 0, quiet);
+            if (rootSize > 0 && offset + (long)rootOffset * SECTOR_SIZE < isoFS.Length)
+            {
+                GetValidSectors(isoFS, offset, sysSectors, fileSectors, (long)rootOffset * SECTOR_SIZE, rootSize, 0, quiet);
+            }
 
             var sysRanges = new List<(uint, uint)>();
             var sortedSysSectors = sysSectors.Distinct().OrderBy(x => x).ToList();

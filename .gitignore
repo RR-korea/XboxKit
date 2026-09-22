@@ -361,3 +361,14 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# XboxKit Custom Ignores
+publish/
+StealthFiles/
+*.iso
+*.xiso
+*.video.iso
+*.filler
+*.seed
+*.zar
+logs/

@@ -24,19 +24,21 @@ Write-Host "==================================================" -ForegroundColor
 Write-Host "  XboxKit GUI 빌드 시작: 버전 $currentVerStr" -ForegroundColor Cyan
 Write-Host "==================================================" -ForegroundColor Cyan
 
+$utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+
 # 2. csproj 파일 버전 갱신
-$csprojContent = Get-Content $csprojFile -Raw
+$csprojContent = [System.IO.File]::ReadAllText($csprojFile, [System.Text.Encoding]::UTF8)
 $csprojContent = [regex]::Replace($csprojContent, "<Version>[^<]+</Version>", "<Version>$currentVerStr</Version>")
 $csprojContent = [regex]::Replace($csprojContent, "<AssemblyVersion>[^<]+</AssemblyVersion>", "<AssemblyVersion>$currentVerStr</AssemblyVersion>")
 $csprojContent = [regex]::Replace($csprojContent, "<FileVersion>[^<]+</FileVersion>", "<FileVersion>$currentVerStr</FileVersion>")
-$csprojContent | Set-Content $csprojFile -Encoding utf8
+[System.IO.File]::WriteAllText($csprojFile, $csprojContent, $utf8NoBom)
 
 # 3. README.md 파일 버전 및 빌드 정보 갱신
 $readmeFile = Join-Path $root "README.md"
 if (Test-Path $readmeFile) {
-    $readmeContent = Get-Content $readmeFile -Raw
+    $readmeContent = [System.IO.File]::ReadAllText($readmeFile, [System.Text.Encoding]::UTF8)
     $readmeContent = [regex]::Replace($readmeContent, "badge/Version-v[^-\)]+-brightgreen\.svg", "badge/Version-v$currentVerStr-brightgreen.svg")
-    $readmeContent | Set-Content $readmeFile -Encoding utf8
+    [System.IO.File]::WriteAllText($readmeFile, $readmeContent, $utf8NoBom)
 }
 
 # 4. 실행 중인 기존 프로세스 종료

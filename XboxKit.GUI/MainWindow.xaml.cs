@@ -336,8 +336,7 @@ namespace XboxKit.GUI
                             long offset = LibXGD.XGD.XISO_OFFSET[targetXgdType];
                             if (fs.Length > offset)
                             {
-                                fs.Seek(offset, SeekOrigin.Begin);
-                                if (LibXGD.XDVDFS.IsValidXISO(fs))
+                                if (LibXGD.XDVDFS.IsValidXISO(fs, offset))
                                 {
                                     AppendLog($" [OK] Redump 내부 게임 파티션(오프셋: 0x{offset:X8})에서 유효한 XDVDFS 시그니처가 정상 확인되었습니다!");
                                 }
